@@ -49,11 +49,10 @@ Develop with:
 $ make bash
 ```
 
-That will create a Docker container and run bash inside it. The project's
-source code will be available in `~/app` and synced with your local xcflushd
-directory. You can edit files in your preferred environment and still be able
-to run whatever you need inside the Docker container.
-
+That will create a Docker container and run bash inside it. The project's source
+code will be available in `~/app` and synced with your local xcflushd directory.
+You can edit files in your preferred environment and still be able to run
+whatever you need inside the Docker container.
 
 ## Deployment
 
@@ -61,7 +60,7 @@ You will need a Redis server running.
 
 ### Docker
 
-You can use `make build` to build Docker images. Run `make info` to obtain
+You can use `make build` to build Docker images. Run `make info`to obtain
 information about variables that control this process as well as other targets.
 
 Build:
@@ -140,51 +139,74 @@ This section describes both verification and signing of docker image.
 
 #### Verification
 
-The authenticity of an image can be verified using the signature attached to each release at the GitHub [Releases page](https://github.com/3scale/xcflushd/releases) (starting from version `v1.2.1`). The signature file has a predefined name: `xcflushd-image-<DOCKER_VERSION>.signature`.
+The authenticity of an image can be verified using the signature attached to
+each release at the GitHub [Releases page](https://github.com/3scale/xcflushd/releases) (starting from version `v1.2.1`).
 
-The signature is generated using a PGP private key. The corresponding PGP public key is published to PGP keyservers for retrieval and usage in image verification.
+The signature file has a predefined name: `xcflushd-image-<DOCKER_VERSION>.signature`.
 
-The process of verification involves details such as fetching keys from PGP keyring, subkeys, inspecting the docker image etc. The Makefile in the project directory simplifies this process of verification using two makefile targets:
+The signature is generated using a PGP private key. The corresponding PGP public
+key is published to PGP keyservers for retrieval and usage in image verification.
+
+The process of verification involves details such as fetching keys from PGP
+keyring, subkeys, inspecting the docker image etc. The Makefile in the project
+directory simplifies this process of verification using two makefile targets:
+
 * verify
 * verify-docker
 
-Either of these targets will perform verification and print a pass/fail message. The use of these target is described in more detail in later sections.
+Either of these targets will perform verification and print a pass/fail message.
+The use of these target is described in more detail in later sections.
 
 The above Makefile targets use the following tools for verification:
 
-* [GnuPG 2](https://www.gnupg.org) : OpenPGP encryption and signing tool.  This is used to fetch the published PGP public keys and add them to the PGP keyring.
-* [Skopeo](https://github.com/projectatomic/skopeo):  A command line utility that provides various operations with container images and container registries. This utility is used to verify the authenticity using the PGP public key, the image and the signature from the Docker hub.
+* [GnuPG 2](https://www.gnupg.org): OpenPGP encryption and signing tool. This is
+used to fetch the published PGP public keys and add them to the PGP keyring.
+* [Skopeo](https://github.com/projectatomic/skopeo): A command line utility that provides various operations with container images and container registries. This utility is used to verify the authenticity using the PGP public key, the image and the signature from the Docker hub.
 
 ##### Makefile target: verify
-To verify an  image ( e.g. `3scale/xcflushd:1.2.1-1` ), run:
+
+To verify an image (e.g. `3scale/xcflushd:1.2.1-1` ), run:
 
 > make TAG=1.2.1 DOCKER_REL=1 verify
 
 You could also specify a particular `KEY_ID` to check against.
 Run `make info` to get information about other variables.
 
-The `verify` target assumes that GnuPG 2 and Skopeo are installed and searches for `gpg2` and `skopeo` utilities on the bash shell command path. On some RPM-based OS, `gpg2` and/or `skopeo` are either installed or easily installable using a packet manager. Verification using the verify target is fairly simple to use. On other OS ( e.g non RPM based ), installing nuPG 2 and Skopeo can be more complicated. On such systems verification using the verify `verify-docker` target is probably easier to use than the `verify` target.
+The `verify` target assumes that GnuPG 2 and Skopeo are installed and searches
+for `gpg2` and `skopeo` utilities on the bash shell command path. On some
+RPM-based OS, `gpg2` and/or `skopeo` are either installed or easily installable
+using a packet manager. Verification using the verify target is fairly simple to
+use. On other OS (e.g non RPM based), installing GnuPG 2 and Skopeo can be more
+complicated. On such systems verification using the verify `verify-docker`
+target is probably easier to use than the `verify` target.
 
-To install gpg2 and skpeo on Red Hat Enterprise Linux (RHEL), use the following instructions.
+To install gpg2 and skopeo on Red Hat Enterprise Linux (RHEL), use the following
+instructions.
 1. gpg2 is installed by default.
-1. skopeo can be installed as follows:
+2. skopeo can be installed as follows:
    * sudo yum repolist all ## List all repositories
    * Find the \*-extras repository
    * sudo yum-config-manager --enable rhui-REGION-rhel-server-extras # Enable extras repository
    * sudo yum install skopeo
 
-The `verify` target :
-* If an ASCII armored file $(KEY_ID).asc exists, then the keys are imported form this file into the PGP ring. The PGP keys are imported from the PGP key servers only if the $(KEY_ID).asc file does not exist. $(KEY_ID) is the value of the PGP Key ID that was used in signing of the docker image.
-* Fetches PGP public keys associated with the $(KEY_ID) from the PGP keyring, iterates over them and uses skopeo tool to verify the authenticity of the image.
+The `verify` target:
+* If an ASCII armored file $(KEY_ID).asc exists, then the keys are imported from
+this file into the PGP ring. The PGP keys are imported from the PGP key servers
+only if the $(KEY_ID).asc file does not exist. $(KEY_ID) is the value of the PGP
+Key ID that was used in signing of the docker image.
+* Fetches PGP public keys associated with the $(KEY_ID) from the PGP keyring,
+iterates over them and uses skopeo tool to verify the authenticity of the image.
 * Sucess/failure message is printed.
 
 ##### Makefile target: verify-docker
 
-The verify-docker target builds a Docker image that can verify other docker-images. This method is easy to use on any OS but particularly useful on OS where gpg2 and skopeo tools are not easy to install.
+The verify-docker target builds a Docker image that can verify other docker
+images. This method is easy to use on any OS but particularly useful on OS where
+gpg2 and skopeo tools are not easy to install.
 
 This requires Docker and GNU Make.
 
-The command you want to run for verifying the docker release 1 of v1.2.1 is:
+The command you want to run for verifying the Docker release 1 of v1.2.1 is:
 
 > make TAG=1.2.1 DOCKER_REL=1 verify-docker
 
